@@ -1,0 +1,65 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: optional:configserver:http://localhost:8888
+  cloud:
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          "[/**]":
+            allowedOrigins:
+              - http://localhost:5173
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: device-service
+          uri: lb://DEVICE-SERVICE
+          predicates:
+            - Path=/api/devices/**
+          filters:
+            - StripPrefix=1
+        - id: sensor-data-service
+          uri: lb://SENSOR-DATA-SERVICE
+          predicates:
+            - Path=/api/sensor-data/**
+          filters:
+            - StripPrefix=1
+        - id: alert-service
+          uri: lb://ALERT-SERVICE
+          predicates:
+            - Path=/api/alerts/**
+          filters:
+            - StripPrefix=1
+        - id: media-service
+          uri: lb://MEDIA-SERVICE
+          predicates:
+            - Path=/api/media/**
+          filters:
+            - StripPrefix=1
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env,gateway
